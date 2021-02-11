@@ -8,16 +8,6 @@ public class HomeWork1 {
         double f = 1.5;
         char g = '@';
         boolean isNaN = true;
-        System.out.println(isSumCheck(1, 7));
-        MinusAlert(-5);
-        MinusAlert(0);
-        MinusAlert(5);
-        System.out.println(isMinus(-5));
-        System.out.println(isMinus(0));
-        System.out.println(isMinus(5));
-        helloName("Леша");
-        leapYear(3700);
-
     }
 
     public static float action(float a, float b, float c, float d) {
