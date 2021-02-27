@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 public class CrossZero {
     public static char[][] field; //игровое поле
+    public static int SIZE = -1;
     public static ArrayList<Boolean> horizontalLineStatus = new ArrayList<>(); //доступные линии для заполнения по горизонтали
     public static ArrayList<Boolean> verticalLineStatus = new ArrayList<>(); //доступные линии для заполнения по вертикали
     public static Scanner consoleReader = new Scanner(System.in);
@@ -16,14 +17,63 @@ public class CrossZero {
     //фаза 1 - проверка хода игрока и проверка куда поставить по горизонталям и вертикалям
     //фаза 2 - пытается заполнить диагонали, если возможности нет переходит к фазе 1
     //фаза 3 - повышается gameBalance, компьютер активно пытается помешать тебе победить. Активируется если у АИ нет больше шансов на победу
-    //версия игры где для победы необходимо закрыть лишь часть клеток, работает более менее корректно с небольшими полями (5х5 или 6х6)
+    //версия игры где для победы необходимо закрыть лишь часть клеток, работает корректно если условие победы меньше размера поля не более чем на 3
     public static boolean turnPC = true;
     public static int gameBalance = 1;
     public static char DOT_ZERO = '0', DOT_X = 'X', EMPTY = '.';
     public static int winCondition;
 
     public static void main(String[] args) {
-        int n = -1;
+        fieldQuestion(SIZE); //спрашиваем размер поля
+        computerPhase = random.nextInt(3); //генерируем вариант хода
+        field = new char[SIZE][SIZE]; //инициализируем игровое поле
+        field_Init(field); //заполняем игровое поле и массивы доступных побед
+        winConditionQuestion(); //задаем вопрос об условиях победы
+        printField(field); //печатаем поле
+        while (!end) {
+            humanTurn(); //ход человека
+            winnerCheck(field); //проверка победителя
+            if (end) {
+                printField(field); //печатаем поле
+                break;
+            }
+            actionPC(field); //действует компьютер
+            winnerCheck(field); //проверка победителя
+            printField(field); //печатаем поле
+        }
+        consoleReader.close();
+    }
+
+    private static void humanTurn() {
+        int y = -1, x = -1;
+        do {
+            System.out.println("Введите координаты в формате x y:");
+            if (consoleReader.hasNextInt()) {
+                x = consoleReader.nextInt() - 1;
+            }
+            if (consoleReader.hasNextInt()) {
+                y = consoleReader.nextInt() - 1;
+            }
+            consoleReader.nextLine();
+        } while (!isValidCell(x, y));
+        field[y][x] = DOT_X;
+    }
+
+    private static void winConditionQuestion() {
+        System.out.println("Введите длину выстроенной линии для победы или введите любую букву для установки значения по умолчанию (длина ряда): ");
+        try {
+            winCondition = consoleReader.nextInt();
+            if (winCondition >= field.length) throw new Exception();
+            System.out.println("Установлено новое значение, для победы достаточно выставить в ряд " + winCondition + " элемента!");
+        } catch (Exception e) {
+            winCondition = field.length;
+            consoleReader.nextLine();
+            System.out.println("Установлено стандартное значение (пока полностью не заполнится ряд крестиков или ноликов)!");
+        }
+        System.out.println();
+    }
+
+    private static void fieldQuestion(int n) {
         System.out.println("Привет! Я маленький компьютерный мозг!\n Давай играть в крестики-нолики! \n Введите размер поля: ");
         do {
             try {
@@ -35,50 +85,7 @@ public class CrossZero {
             }
 
         } while (n < 0);
-        System.out.println("Введите длину выстроенной линии для победы или введите любую букву для установки значения по умолчанию (длина ряда): ");
-        field = new char[n][n]; //инициализируем игровое поле
-        computerPhase = random.nextInt(3); //генерируем вариант хода
-        try {
-            winCondition = consoleReader.nextInt();
-            if (winCondition >= field.length) throw new Exception();
-            System.out.println("Установлено новое значение, для победы достаточно выставить в ряд " + winCondition + " элемента!");
-        } catch (Exception e) {
-            winCondition = field.length;
-            consoleReader.nextLine();
-            System.out.println("Установлено стандартное значение (пока полностью не заполнится ряд крестиков или ноликов)!");
-        }
-
-        System.out.println();
-        field_Init(field);
-        printField(field);
-        System.out.println();
-        int y = -1, x = -1;
-        while (!end) {
-            do {
-                System.out.println("Введите координаты в формате x y:");
-                if (consoleReader.hasNextInt()) {
-                    x = consoleReader.nextInt() - 1;
-                }
-                if (consoleReader.hasNextInt()) {
-                    y = consoleReader.nextInt() - 1;
-                }
-                consoleReader.nextLine();
-            } while (!isValidCell(x, y));
-            field[y][x] = DOT_X;
-            winnerCheck(field);
-            if (end) {
-                printField(field);
-                System.out.println();
-                break;
-            }
-            checkHorizontalLineStatus(field);
-            checkVerticalLineStatus(field);
-            actionPC(field);
-            winnerCheck(field);
-            printField(field);
-            System.out.println("\n");
-        }
-        consoleReader.close();
+        SIZE = n;
     }
 
     public static void field_Init(char[][] field) { //инициализация игрового поля
@@ -108,6 +115,7 @@ public class CrossZero {
             }
             System.out.println();
         }
+        System.out.println("\n");
     }
 
     public static boolean isValidCell(int x, int y) { //проверка ввода
@@ -175,6 +183,8 @@ public class CrossZero {
 
     public static void actionPC(char[][] field) {  //действует компьютер. В данный метод можно вкладывать паттерны хода
         turnPC = true;
+        checkHorizontalLineStatus(CrossZero.field);
+        checkVerticalLineStatus(CrossZero.field);
         switch (computerPhase) {
             case 0: {
                 //если у ПК первый ход ставим рэндомно ноль
