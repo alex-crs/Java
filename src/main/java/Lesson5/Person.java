@@ -8,6 +8,15 @@ public class Person {
     private int salary;
     private int age;
 
+    public Person(String name, String function, String email, String phone, int salary, int age) {
+        this.name = name;
+        this.function = function;
+        this.email = email;
+        this.phone = phone;
+        this.salary = salary;
+        this.age = age;
+    }
+
     public String getName() {
         return name;
     }
@@ -58,15 +67,6 @@ public class Person {
 
     public void print() {
         System.out.println("Фамилия, Имя: " + name + "\n" + "Должность: " + function + "\n" + "Электронная почта: " + email + "\n" + "Телефон: " + phone + "\n" + "Заработная плата: " + salary + "\n" + "Возраст: " + age + "\n" + "------------");
-    }
-
-    public Person(String name, String function, String email, String phone, int salary, int age) {
-        this.name = name;
-        this.function = function;
-        this.email = email;
-        this.phone = phone;
-        this.salary = salary;
-        this.age = age;
     }
 
 }
