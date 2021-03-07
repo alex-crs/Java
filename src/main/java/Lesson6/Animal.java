@@ -4,6 +4,17 @@ public class Animal {
     int distance;
     String name;
     private static int count = 0;
+    Plate plate;
+    boolean satiety = false;
+    int hungry;
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isSatiety() {
+        return satiety;
+    }
 
     public Animal(String name) {
         this.name = name;
@@ -20,6 +31,10 @@ public class Animal {
 
     void swim(int distance) {
         System.out.println(name + " проплыл " + distance + " метров!");
+    }
+
+    void eat(Plate plate){
+
     }
 
 }
