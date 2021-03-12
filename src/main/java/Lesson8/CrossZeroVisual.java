@@ -71,7 +71,7 @@ public class CrossZeroVisual {
     }
 
     public static void startGame() throws IOException {
-        computerPhase = random.nextInt(3); //генерируем вариант хода
+        computerPhase = random.nextInt(2); //генерируем вариант хода
         field_Init(field); //заполняем игровое поле и массивы доступных побед
         winCondition = field.length;
         while (!end) {
