@@ -1,15 +1,16 @@
 package Lesson8;
 
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.Scanner;
 
-public class CrossZero {
+public class CrossZeroVisual {
     public static String[][] field; //игровое поле
-    public static int SIZE = -1;
+    public static int SIZE = 3;
     public static ArrayList<Boolean> horizontalLineStatus = new ArrayList<>(); //доступные линии для заполнения по горизонтали
     public static ArrayList<Boolean> verticalLineStatus = new ArrayList<>(); //доступные линии для заполнения по вертикали
-    public static Scanner consoleReader = new Scanner(System.in);
     public static Random random = new Random();
     public static boolean end; //конец игры
     public static int computerPhase = 1;
@@ -22,55 +23,68 @@ public class CrossZero {
     public static int gameBalance = 1;
     public static String DOT_ZERO = "0", DOT_X = "X", EMPTY = ".";
     public static int winCondition;
+    private static AlertWindow alert;
+    public static Window visualWindow;
+    private static int userCount = 0, pcCount = 0;
+    private static File clipFile = new File("src/main/java/Lesson8/clip.wav");
+    private static File failFile = new File("src/main/java/Lesson8/fail.wav");
+    private static File winFile = new File("src/main/java/Lesson8/win.wav");
+    private static AudioInputStream userClip, fail, win;
 
-    public CrossZero(int SIZE) {
-        this.SIZE=SIZE;
-        field = new String[SIZE][SIZE];
-        field_Init(field);
-    }
-
-    private static void humanTurn() {
-        int y = -1, x = -1;
-        do {
-            System.out.println("Введите координаты в формате x y:");
-            if (consoleReader.hasNextInt()) {
-                x = consoleReader.nextInt() - 1;
-            }
-            if (consoleReader.hasNextInt()) {
-                y = consoleReader.nextInt() - 1;
-            }
-            consoleReader.nextLine();
-        } while (!isValidCell(x, y));
-        field[y][x] = DOT_X;
-    }
-
-    private static void winConditionQuestion() {
-        System.out.println("Введите длину выстроенной линии для победы или введите любую букву для установки значения по умолчанию (длина ряда): ");
+    static {
         try {
-            winCondition = consoleReader.nextInt();
-            if (winCondition >= field.length) throw new Exception();
-            System.out.println("Установлено новое значение, для победы достаточно выставить в ряд " + winCondition + " элемента!");
-        } catch (Exception e) {
-            winCondition = field.length;
-            consoleReader.nextLine();
-            System.out.println("Установлено стандартное значение (пока полностью не заполнится ряд крестиков или ноликов)!");
+            userClip = AudioSystem.getAudioInputStream(clipFile);
+            fail = AudioSystem.getAudioInputStream(failFile);
+            win = AudioSystem.getAudioInputStream(winFile);
+        } catch (UnsupportedAudioFileException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        System.out.println();
     }
 
-    private static void fieldQuestion(int n) {
-        System.out.println("Привет! Я маленький компьютерный мозг!\n Давай играть в крестики-нолики! \n Введите размер поля: ");
-        do {
-            try {
-                n = consoleReader.nextInt();
-            } catch (Exception e) {
-                System.out.println("Неверный ввод!");
-                consoleReader.nextLine();
-                continue;
-            }
+    private static Clip clip;
+    private static Clip failClip;
+    private static Clip winClip;
 
-        } while (n < 0);
-        SIZE = n;
+
+    static {
+        try {
+            clip = AudioSystem.getClip();
+            clip.open(userClip);
+            failClip = AudioSystem.getClip();
+            failClip.open(fail);
+            winClip = AudioSystem.getClip();
+            winClip.open(win);
+        } catch (LineUnavailableException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        field = new String[SIZE][SIZE]; //инициализируем игровое поле
+        visualWindow = new Window(SIZE);
+        alert = new AlertWindow();
+        while (true) {
+            startGame();
+        }
+    }
+
+    public static void startGame() throws IOException {
+        computerPhase = random.nextInt(3); //генерируем вариант хода
+        field_Init(field); //заполняем игровое поле и массивы доступных побед
+        winCondition = field.length;
+        while (!end) {
+            actionPC(field); //действует компьютер
+            winnerCheck(field); //проверка победителя
+        }
+    }
+
+    public static void humanTurn(int y, int x) throws IOException, LineUnavailableException {
+        field[y][x] = DOT_X;
+        clip.setFramePosition(0);
+        clip.start();
+        turnPC = true;
     }
 
     public static void field_Init(String[][] field) { //инициализация игрового поля
@@ -85,30 +99,6 @@ public class CrossZero {
         for (int i = 0; i < field.length; i++) { //заполняем массив доступной победы по вертикали
             verticalLineStatus.add(i, true);
         }
-    }
-
-    public static void printField(String[][] field) { //вывод на экран текущего состояния поля
-        String up = "  ";
-        for (int i = 0; i < field.length; i++) { //выводим шапку
-            up += i + 1 + " ";
-        }
-        System.out.println(up);
-        for (int i = 0; i < field.length; i++) {
-            System.out.print(i + 1 + " "); //выводим левую шкалу
-            for (int j = 0; j < field[i].length; j++) {
-                System.out.print(field[i][j] + " ");
-            }
-            System.out.println();
-        }
-        System.out.println("\n");
-    }
-
-    public static boolean isValidCell(int x, int y) { //проверка ввода
-        if (x < 0 || y < 0 || x > field.length - 1 || y > field.length - 1 || field[y][x] != EMPTY) {
-            System.out.println("Неверный ввод");
-            return false;
-        }
-        return true;
     }
 
     public static void checkVerticalLineStatus(String[][] field) {  //проверяет вертикальные линии, заполняет массив доступных для победы
@@ -140,7 +130,6 @@ public class CrossZero {
         }
     }
 
-
     public static int checkDiagonalLineStatus(String[][] field, String value, String side) {  //проверяет диагонали (правую и левую)
         int status = 0;
         switch (side) {
@@ -148,8 +137,6 @@ public class CrossZero {
                 for (int i = 0, j = 0; i < field.length; i++, j++) {
                     if (field[i][j] == value) {
                         status++;
-                    } else if (field[i][j] != value && winCondition != field.length && status > 0) { //проверка на наличие последовательности в строке (исключает true для пустых клеток между значениями)
-                        break;
                     }
                 }
                 break;
@@ -157,8 +144,6 @@ public class CrossZero {
                 for (int i = 0, j = field[i].length - 1; j >= 0; i++, j--) {
                     if (field[i][j] == value) {
                         status++;
-                    } else if (field[i][j] != value && winCondition != field.length && status > 0) { //проверка на наличие последовательности в строке (исключает true для пустых клеток между значениями)
-                        break;
                     }
                 }
                 break;
@@ -167,35 +152,47 @@ public class CrossZero {
     }
 
     public static void actionPC(String[][] field) {  //действует компьютер. В данный метод можно вкладывать паттерны хода
-        turnPC = true;
-        checkHorizontalLineStatus(CrossZero.field);
-        checkVerticalLineStatus(CrossZero.field);
+        checkHorizontalLineStatus(field);
+        checkVerticalLineStatus(field);
         switch (computerPhase) {
             case 0: {
                 //если у ПК первый ход ставим рэндомно ноль
-                int x = 0;
-                int y = 0;
-                do {
-                    x = random.nextInt(field.length - 1);
-                    y = random.nextInt(field.length - 1);
-                    if (field[x][y] == EMPTY) {
-                        field[x][y] = DOT_ZERO;
-                        break;
-                    }
-                } while (true);
-                turnPC = false;
-                computerPhase = 1;
+                if (turnPC) {
+                    int x = 0;
+                    int y = 0;
+                    do {
+                        x = random.nextInt(field.length - 1);
+                        y = random.nextInt(field.length - 1);
+                        if (field[x][y] == EMPTY) {
+                            field[x][y] = DOT_ZERO;
+                            Window.cells[x][y].setText("0");
+                            break;
+                        }
+                    } while (true);
+                    turnPC = false;
+                    computerPhase = 1;
+                }
                 break;
             }
             case 1: {
-                ifDanger(field);
+                if (turnPC) {
+                    winnerChance(field);
+                }
+                if (turnPC) {
+                    ifDanger(field);
+                }
                 if (turnPC) {
                     normalAction(field);
                 }
                 break;
             }
             case 2: {
-                ifDanger(field);
+                if (turnPC) {
+                    winnerChance(field);
+                }
+                if (turnPC) {
+                    ifDanger(field);
+                }
                 if (turnPC) {
                     if (checkDiagonalLineStatus(field, EMPTY, "l") <= field.length && checkDiagonalLineStatus(field, DOT_X, "l") == 0) {
                         setZero(field, 0, "l");
@@ -232,8 +229,6 @@ public class CrossZero {
                 for (int i = 0; i < field[arrayPosition].length; i++) {
                     if (field[arrayPosition][i] == value) {
                         status++;
-                    } else if (field[arrayPosition][i] != value && winCondition != field.length && status > 0) { //проверка на наличие последовательности в строке, необходим для случая когда для победы нужна не вся длина массива
-                        break;
                     }
                 }
                 break;
@@ -281,11 +276,11 @@ public class CrossZero {
         for (int i = 0; i < field.length; i++) {
             verticalChanceWin = lineScanner(field, i, DOT_ZERO, "v");
             horizontalChanceWin = lineScanner(field, i, DOT_ZERO, "h");
-            if ((verticalChanceWin >= verticalChanceMAX) && Lesson4.CrossZero.verticalLineStatus.get(i) == true) {
+            if ((verticalChanceWin >= verticalChanceMAX) && verticalLineStatus.get(i) == true) {
                 verticalChanceMAX = verticalChanceWin;
                 verticalMaxChancePosition = i;
             }
-            if ((horizontalChanceWin >= horizontalChanceMAX) && (Lesson4.CrossZero.horizontalLineStatus.get(i) == true)) {
+            if ((horizontalChanceWin >= horizontalChanceMAX) && (horizontalLineStatus.get(i) == true)) {
                 horizontalChanceMAX = horizontalChanceWin;
                 horizontalMaxChancePosition = i;
             }
@@ -309,6 +304,7 @@ public class CrossZero {
                 for (int i = 0; i < field.length; i++) {
                     if (field[arrayPosition][i] == EMPTY) {
                         field[arrayPosition][i] = DOT_ZERO;
+                        Window.cells[arrayPosition][i].setText(DOT_ZERO);
                         break;
                     }
                 }
@@ -317,6 +313,7 @@ public class CrossZero {
                 for (int i = 0; i < field.length; i++) {
                     if (field[i][arrayPosition] == EMPTY) {
                         field[i][arrayPosition] = DOT_ZERO;
+                        Window.cells[i][arrayPosition].setText(DOT_ZERO);
                         break;
                     }
                 }
@@ -325,6 +322,7 @@ public class CrossZero {
                 for (int i = 0, j = 0; i < field.length; i++, j++) {
                     if (field[i][j] == EMPTY) {
                         field[i][j] = DOT_ZERO;
+                        Window.cells[i][j].setText(DOT_ZERO);
                         break;
                     }
                 }
@@ -333,6 +331,7 @@ public class CrossZero {
                 for (int i = 0, j = field.length; j > 0; i++, j--) {
                     if (field[i][j - 1] == EMPTY) {
                         field[i][j - 1] = DOT_ZERO;
+                        Window.cells[i][j - 1].setText(DOT_ZERO);
                         break;
                     }
                 }
@@ -342,48 +341,87 @@ public class CrossZero {
         }
     }
 
+    public static void winnerChance(String[][] field) { //проверка ситуации, когда у человека и компьютера одинаковые шансы на победу. Компьютер должен победить, а не мешать в этом случае
+        for (int i = 0; i < field.length; i++) {
+            if (lineScanner(field, i, DOT_ZERO, "v") == winCondition - 1 && lineScanner(field, i, DOT_X, "v") == 0) {
+                setZero(field, i, "v");
+                turnPC = false;
+                break;
+            }
+            if (lineScanner(field, i, DOT_ZERO, "h") == winCondition - 1 && lineScanner(field, i, DOT_X, "h") == 0) {
+                setZero(field, i, "h");
+                turnPC = false;
+                break;
+            }
+            if (checkDiagonalLineStatus(field, DOT_ZERO, "l") == winCondition - 1 && checkDiagonalLineStatus(field, DOT_X, "l") == 0) {
+                setZero(field, 0, "l");
+                turnPC = false;
+                break;
+            }
+            if (checkDiagonalLineStatus(field, DOT_ZERO, "r") == winCondition && checkDiagonalLineStatus(field, DOT_X, "r") == 0) {
+                setZero(field, 0, "r");
+                turnPC = false;
+                break;
+            }
+        }
+    }
+
     public static void winnerCheck(String[][] field) { //проверка победителя
         for (int i = 0; i < field.length; i++) {
             if (lineScanner(field, i, DOT_X, "v") >= winCondition) {
                 winAlert(true);
+                Window.lineWinnerBacklight(i, "v", true);
                 break;
             }
             if (lineScanner(field, i, DOT_ZERO, "v") >= winCondition) {
                 winAlert(false);
+                Window.lineWinnerBacklight(i, "v", false);
                 break;
             }
             if (lineScanner(field, i, DOT_X, "h") >= winCondition) {
                 winAlert(true);
+                Window.lineWinnerBacklight(i, "h", true);
                 break;
             }
             if (lineScanner(field, i, DOT_ZERO, "h") >= winCondition) {
                 winAlert(false);
+                Window.lineWinnerBacklight(i, "h", false);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_X, "l") >= winCondition) {
                 winAlert(true);
+                Window.lineWinnerBacklight(i, "l", true);
+                break;
+            }
+            if (checkDiagonalLineStatus(field, DOT_ZERO, "l") >= winCondition) {
+                winAlert(false);
+                Window.lineWinnerBacklight(i, "l", false);
+                break;
+            }
+            if (checkDiagonalLineStatus(field, DOT_X, "r") >= winCondition) {
+                winAlert(true);
+                Window.lineWinnerBacklight(i, "r", true);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_ZERO, "r") >= winCondition) {
                 winAlert(false);
+                Window.lineWinnerBacklight(i, "r", false);
                 break;
             }
         }
-        if (isDraw(field)) {
-            System.out.println("\n");
-            System.out.println("Простите, но у нас ничья!:(");
+        if (isDraw(field) && !end) {
+            alert.setLabelText("  Простите, но у нас ничья!:(");
+            alert.setVisible(true);
             end = true;
         }
         if (!end && !horizontalLineStatus.contains(true) && !verticalLineStatus.contains(true) && computerPhase != 3) { //если у компьютера не остается шанса на победу, он начинает активно мешать
-            System.out.println("\n");
-            System.out.println("Ты не оставил мне шанса на победу! Я в ярости!! \\\\0.0//");
             computerPhase = 3;
             gameBalance = 2;
         }
 
     }
 
-    private static boolean isDraw(String[][] field) { //проверка на ничью
+    public static boolean isDraw(String[][] field) { //проверка на ничью
         int emptyElements = 0;
         for (String[] chars : field) {
             for (String aChar : chars) {
@@ -397,11 +435,21 @@ public class CrossZero {
 
     public static void winAlert(boolean player) { //вывод сообщения о победе или проигрше
         if (!player) {
-            System.out.println("Увы, но вы проиграли!!");
-            Lesson4.CrossZero.end = true;
+            pcCount++;
+            failClip.setFramePosition(0);
+            failClip.start();
+            alert.setLabelText("  Увы, но вы проиграли!! Хотите повторить?");
+            alert.setTitle("Score: " + "Вы " + userCount + " vs " + "PC " + pcCount);
+            alert.setVisible(true);
+            end = true;
         } else {
-            System.out.println(("Поздравляю! Вы победили!! Еще увидимся ;) "));
-            Lesson4.CrossZero.end = true;
+            userCount++;
+            winClip.setFramePosition(0);
+            winClip.start();
+            alert.setLabelText("  Вы победили!! Хотите повторить?");
+            alert.setTitle("Score: " + "Вы " + userCount + " vs " + "PC " + pcCount);
+            alert.setVisible(true);
+            end = true;
         }
     }
 }
