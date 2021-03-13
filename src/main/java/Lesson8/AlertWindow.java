@@ -43,11 +43,11 @@ public class AlertWindow extends JFrame {
         buttonYes.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
                 CrossZeroVisual.end = false;
+                CrossZeroVisual.turnPC=false;
                 CrossZeroVisual.computerPhase = 1;
                 Window.fieldReBuilder();
-
+                dispose();
             }
         });
     }

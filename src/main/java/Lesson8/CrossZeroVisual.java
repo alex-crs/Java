@@ -19,17 +19,18 @@ public class CrossZeroVisual {
     //фаза 2 - пытается заполнить диагонали, если возможности нет переходит к фазе 1
     //фаза 3 - повышается gameBalance, компьютер активно пытается помешать тебе победить. Активируется если у АИ нет больше шансов на победу
     //версия игры где для победы необходимо закрыть лишь часть клеток, работает корректно если условие победы меньше размера поля не более чем на 3
-    public static boolean turnPC = true;
+    public static boolean turnPC = false;
     public static int gameBalance = 1;
     public static String DOT_ZERO = "0", DOT_X = "X", EMPTY = ".";
     public static int winCondition;
     private static AlertWindow alert;
     public static Window visualWindow;
     private static int userCount = 0, pcCount = 0;
-    private static File clipFile = new File("src/main/java/Lesson8/clip.wav");
-    private static File failFile = new File("src/main/java/Lesson8/fail.wav");
-    private static File winFile = new File("src/main/java/Lesson8/win.wav");
+    private static File clipFile = new File("src/main/java/Lesson8/music/clip.wav");
+    private static File failFile = new File("src/main/java/Lesson8/music/fail.wav");
+    private static File winFile = new File("src/main/java/Lesson8/music/win.wav");
     private static AudioInputStream userClip, fail, win;
+    private static Clip clip, failClip, winClip;
 
     static {
         try {
@@ -42,12 +43,6 @@ public class CrossZeroVisual {
             e.printStackTrace();
         }
     }
-
-    private static Clip clip;
-    private static Clip failClip;
-    private static Clip winClip;
-
-
     static {
         try {
             clip = AudioSystem.getClip();
@@ -61,7 +56,7 @@ public class CrossZeroVisual {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         field = new String[SIZE][SIZE]; //инициализируем игровое поле
         visualWindow = new Window(SIZE);
         alert = new AlertWindow();
@@ -70,8 +65,8 @@ public class CrossZeroVisual {
         }
     }
 
-    public static void startGame() throws IOException {
-        computerPhase = random.nextInt(2); //генерируем вариант хода
+    public static void startGame() throws IOException, InterruptedException {
+        computerPhase = random.nextInt(3); //генерируем вариант хода
         field_Init(field); //заполняем игровое поле и массивы доступных побед
         winCondition = field.length;
         while (!end) {
@@ -151,7 +146,7 @@ public class CrossZeroVisual {
         return status;
     }
 
-    public static void actionPC(String[][] field) {  //действует компьютер. В данный метод можно вкладывать паттерны хода
+    public static void actionPC(String[][] field) throws InterruptedException {  //действует компьютер. В данный метод можно вкладывать паттерны хода
         checkHorizontalLineStatus(field);
         checkVerticalLineStatus(field);
         switch (computerPhase) {
@@ -208,11 +203,13 @@ public class CrossZeroVisual {
                 break;
             }
             case 3: {
-                do {
-                    ifDanger(field);
-                    gameBalance++;
-                } while (turnPC);
-                gameBalance = 2;
+                if (turnPC) {
+                    do {
+                        ifDanger(field);
+                        gameBalance++;
+                    } while (turnPC);
+                    gameBalance = 2;
+                }
             }
             break;
         }
@@ -236,8 +233,6 @@ public class CrossZeroVisual {
                 for (int i = 0; i < field.length; i++) {
                     if (field[i][arrayPosition] == value) {
                         status++;
-                    } else if (field[i][arrayPosition] != value && winCondition != field.length && status > 0) { //проверка на наличие последовательности в строке, необходим для случая когда для победы нужна не вся длина массива
-                        break;
                     }
                 }
                 break;
@@ -245,7 +240,7 @@ public class CrossZeroVisual {
         return status;
     }
 
-    public static void ifDanger(String[][] field) { //проверяет сколько шагов осталось сопернику для победы, если соперник близок к победе - начинает мешать
+    public static void ifDanger(String[][] field) throws InterruptedException { //проверяет сколько шагов осталось сопернику для победы, если соперник близок к победе - начинает мешать
         for (int i = 0; i < field.length; i++) {
             if (lineScanner(field, i, EMPTY, "h") != 0 && lineScanner(field, i, DOT_X, "h") >= winCondition - gameBalance) {
                 setZero(field, i, "h");
@@ -271,7 +266,7 @@ public class CrossZeroVisual {
         }
     }
 
-    public static void normalAction(String[][] field) { //обычное действие, ищет наиболее подходящую линию на которой доступна победа компьютера
+    public static void normalAction(String[][] field) throws InterruptedException { //обычное действие, ищет наиболее подходящую линию на которой доступна победа компьютера
         int verticalChanceWin = 0, horizontalChanceWin = 0, verticalChanceMAX = 0, horizontalChanceMAX = 0, verticalMaxChancePosition = 0, horizontalMaxChancePosition = 0;
         for (int i = 0; i < field.length; i++) {
             verticalChanceWin = lineScanner(field, i, DOT_ZERO, "v");
@@ -294,7 +289,7 @@ public class CrossZeroVisual {
         }
     }
 
-    public static void setZero(String[][] field, int arrayPosition, String line) { //ставит 0 только там где это можно и нужно
+    public static void setZero(String[][] field, int arrayPosition, String line) throws InterruptedException { //ставит 0 только там где это можно и нужно
         //v - вертикальная линия
         //h - горизонтальная линия
         //l - левая диагональ
@@ -341,7 +336,7 @@ public class CrossZeroVisual {
         }
     }
 
-    public static void winnerChance(String[][] field) { //проверка ситуации, когда у человека и компьютера одинаковые шансы на победу. Компьютер должен победить, а не мешать в этом случае
+    public static void winnerChance(String[][] field) throws InterruptedException { //проверка ситуации, когда у человека и компьютера одинаковые шансы на победу. Компьютер должен победить, а не мешать в этом случае
         for (int i = 0; i < field.length; i++) {
             if (lineScanner(field, i, DOT_ZERO, "v") == winCondition - 1 && lineScanner(field, i, DOT_X, "v") == 0) {
                 setZero(field, i, "v");
@@ -369,47 +364,58 @@ public class CrossZeroVisual {
     public static void winnerCheck(String[][] field) { //проверка победителя
         for (int i = 0; i < field.length; i++) {
             if (lineScanner(field, i, DOT_X, "v") >= winCondition) {
+                turnPC = false;
                 winAlert(true);
                 Window.lineWinnerBacklight(i, "v", true);
                 break;
             }
             if (lineScanner(field, i, DOT_ZERO, "v") >= winCondition) {
+                turnPC = false;
                 winAlert(false);
                 Window.lineWinnerBacklight(i, "v", false);
                 break;
             }
             if (lineScanner(field, i, DOT_X, "h") >= winCondition) {
+                turnPC = false;
                 winAlert(true);
                 Window.lineWinnerBacklight(i, "h", true);
                 break;
             }
             if (lineScanner(field, i, DOT_ZERO, "h") >= winCondition) {
+                turnPC = false;
                 winAlert(false);
                 Window.lineWinnerBacklight(i, "h", false);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_X, "l") >= winCondition) {
+                turnPC = false;
                 winAlert(true);
                 Window.lineWinnerBacklight(i, "l", true);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_ZERO, "l") >= winCondition) {
+                turnPC = false;
                 winAlert(false);
                 Window.lineWinnerBacklight(i, "l", false);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_X, "r") >= winCondition) {
+                turnPC = false;
                 winAlert(true);
                 Window.lineWinnerBacklight(i, "r", true);
                 break;
             }
             if (checkDiagonalLineStatus(field, DOT_ZERO, "r") >= winCondition) {
+                turnPC = false;
                 winAlert(false);
                 Window.lineWinnerBacklight(i, "r", false);
                 break;
             }
         }
         if (isDraw(field) && !end) {
+            turnPC = false;
+            failClip.setFramePosition(0);
+            failClip.start();
             alert.setLabelText("  Простите, но у нас ничья!:(");
             alert.setVisible(true);
             end = true;

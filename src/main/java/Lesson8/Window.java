@@ -102,7 +102,7 @@ public class Window extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (CrossZeroVisual.field[i][j].equals(".") && !CrossZeroVisual.end) {
+            if (CrossZeroVisual.field[i][j].equals(".") && !CrossZeroVisual.end&&!CrossZeroVisual.turnPC) {
                 cells[i][j].setText("X");
                 try {
                     CrossZeroVisual.humanTurn(i, j);
