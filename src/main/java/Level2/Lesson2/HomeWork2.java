@@ -27,7 +27,7 @@ public class HomeWork2 {
                 try {
                     sum += Integer.parseInt(array[i][j]);
                 } catch (NumberFormatException e) {
-                    throw new MyArrayDataException(i, j);
+                    throw new MyArrayDataException(i, j, sum);
                 }
             }
         }
