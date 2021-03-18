@@ -7,13 +7,13 @@ public class HomeWork2 {
         String[][] array = new String[4][4];
         try {
             arrayInit(array);
-            arraySizeChecker(array, 4);
+            arrayChecker(array, 4);
         } catch (MyArraySizeException | MyArrayDataException e) {
             e.printStackTrace();
         }
     }
 
-    public static void arraySizeChecker(String[][] array, int size) throws MyArraySizeException, MyArrayDataException {
+    public static void arrayChecker(String[][] array, int size) throws MyArraySizeException, MyArrayDataException {
         if (array.length != size) {
             throw new MyArraySizeException(array.length > size ? "Размер массива больше " + size : "Размер массива меньше " + size);
         }
