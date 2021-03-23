@@ -4,7 +4,7 @@ import java.util.*;
 
 public class WordList {
     private String name = "default name";
-    List<Object> wordList = new LinkedList<>();
+    private List<Object> wordList = new LinkedList<>();
 
     public Object find(int index) {
         return wordList.get(index);
@@ -52,13 +52,13 @@ public class WordList {
         System.out.println("=============================");
     }
 
-    public void printNotUniqueElements() {
+    public void printNotUniqueElementsSlow() { //метод медленный ввиду того, что размер списка не изменяется и приходится пробегать по нему несколько раз повторно
         List<Object> wordListCopy = new LinkedList<>();
         System.out.println("Повторяющиеся элементы из списка " + "\"" + name + "\"" + ":");
         for (int i = 0; i < wordList.size(); i++) {
             int count = 0;
-            for (int j = 0; j < wordList.size(); j++) {
-                if (wordList.get(i).equals(wordList.get(j)) && !wordListCopy.contains(wordList.get(i))) {
+            for (Object o : wordList) {
+                if (wordList.get(i).equals(o) && !wordListCopy.contains(wordList.get(i))) {
                     count++;
                 }
             }
@@ -68,6 +68,27 @@ public class WordList {
             }
         }
         wordListCopy = null;
+        System.out.println("=============================");
+    }
+
+    public void printNotUniqueElementsFast() { //метод на мой взгляд быстрее в разы, так как массив постепенно убывает (ну и с итератором разобрался заодно:))
+        List<Object> wordListCopy = new LinkedList<>(wordList);
+        System.out.println("Повторяющиеся элементы из списка " + "\"" + name + "\"" + ":");
+        while (wordListCopy.size()>0) {
+            int count = 1;
+            Iterator<Object> iterator = wordListCopy.iterator();
+            Object o1 = iterator.next();
+            iterator.remove();
+            while (iterator.hasNext()) {
+                if (o1.equals(iterator.next())) {
+                    iterator.remove();
+                    count++;
+                }
+            }
+            if (count > 1) {
+                System.out.println(o1 + " повторяется " + count + " раз(а).");
+            }
+        }
         System.out.println("=============================");
     }
 }

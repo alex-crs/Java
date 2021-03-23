@@ -22,11 +22,12 @@ public class HomeWork3_1 {
         list.add("Аксолотль");
         list.add("Аксолотль");
         list.add("Аксолотль");
+        list.add("Якубович");
         list.add(1,"Жена Полина");
         System.out.println(list.find(1));
         System.out.println(list.find("Кот Нээо"));
         list.printList();
         list.printUniqueElements();
-        list.printNotUniqueElements();
+        list.printNotUniqueElementsFast();
     }
 }
