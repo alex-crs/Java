@@ -5,13 +5,13 @@ import java.util.Arrays;
 public class HomeWork5 {
 
     static final int size = 10000000;
+    public static long time = System.currentTimeMillis();
 
     public static void main(String[] args) {
         float[] arr = new float[size];
-        long time = System.currentTimeMillis();
         Arrays.fill(arr, 1f);
-        arrayDividerCalc(arr, 15);
-        System.out.println(System.currentTimeMillis() - time);
+        arrayDividerCalc(arr, 20);
+
     }
 
     public static void arrayCalculate(float[] array, int position) {
@@ -35,13 +35,14 @@ public class HomeWork5 {
                 synchronized (array) {
                     System.arraycopy(arrayCopy, 0, array, position, currentSegmentLength);
                 }
+                System.out.print("Продолжительность работы метода - " + (System.currentTimeMillis() - time) + "\r");
             });
             thread.start();
-            try {
+            /*try {
                 thread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
 
         }
     }
