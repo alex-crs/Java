@@ -8,9 +8,17 @@ import java.lang.reflect.Method;
 public class Tester {
     private static Method beforeSuite = null, afterSuite = null;
 
+    public static void start(String className) {
+        try {
+            start(Class.forName("Level3.Lesson7." + className));
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void start(Class<?> obj) {
         Method[] methods = obj.getDeclaredMethods();
-        checkConditions(obj, methods);  //проверяем уникальность BeforeSuite, AfterSuite и приоритеты
+        checkConditions(methods);  //проверяем уникальность BeforeSuite, AfterSuite и приоритеты
         try {
             if (beforeSuite != null) {  //запускаем BeforeSuite
                 methodRun(obj, beforeSuite);
@@ -43,7 +51,7 @@ public class Tester {
         }
     }
 
-    private static void checkConditions(Class<?> obj, Method[] methods) {
+    private static void checkConditions(Method[] methods) {
         for (int i = 0; i < methods.length; i++) {
             Annotation[] an = methods[i].getDeclaredAnnotations();
             for (int j = 0; j < an.length; j++) {
