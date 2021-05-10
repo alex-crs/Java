@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Test {
     int priority();
+    String message() default "Приоритет запуска задается в пределах от 1 до 10 (включительно)";
 }

@@ -8,6 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface BeforeSuite {
-    int priority() default 0;
     String message() default "В классе не может быть более одного метода с аннотацией BeforeSuite";
 }

@@ -6,13 +6,19 @@ public class TestedClass {
         System.out.println("Запущен метод 1");
     }
 
-    @Test(priority = 2)
+    @Test(priority = 1)
     public static void method2() {
         System.out.println("Запущен метод 2");
     }
+
     @Test(priority = 2)
     public static void method6() {
         System.out.println("Запущен метод 6");
+    }
+
+    @Test(priority = 7)
+    public static void method7() {
+        System.out.println("Запущен метод 7");
     }
 
     @Test(priority = 3)
@@ -25,7 +31,7 @@ public class TestedClass {
         System.out.println("Запущен метод 4");
     }
 
-    @Test(priority = 1)
+    //    @Test(priority = 1)
     public static void method5() {
         System.out.println("Запущен метод 5");
     }
