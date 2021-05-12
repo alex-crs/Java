@@ -12,7 +12,7 @@ public class TestedClass {
     }
 
     @Test(priority = 2)
-    public static void method6() {
+    private static void method6() {
         System.out.println("Запущен метод 6");
     }
 
